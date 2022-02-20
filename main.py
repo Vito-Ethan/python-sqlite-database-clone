@@ -135,7 +135,7 @@ while True:
 
     if query == None: #program quit
         continue
-    elif form.process_query(command)['type'] == 'EXIT':
+    elif query['type'] == 'EXIT':
         check_query(query)
         break
     else:

@@ -18,28 +18,28 @@ def format_command(query):
 def process_query(command):
     match command[0]:
         case 'CREATE':
-            format_json(format_create_query(command))
+            # format_json(format_create_query(command))
             return format_create_query(command)
         case 'DROP':
-            format_json(format_drop_query(command))
+            # format_json(format_drop_query(command))
             return format_drop_query(command)
         case 'USE':
-            format_json(format_use_query(command))
+            # format_json(format_use_query(command))
             return format_use_query(command)
         case 'ALTER':
-            format_json(format_alter_query(command))
+            # format_json(format_alter_query(command))
             return format_alter_query(command)
         case 'SELECT':
-            format_json(format_select_query(command))
+            # format_json(format_select_query(command))
             return format_select_query(command)
         case '.EXIT':
-            format_json({"type": "EXIT"})
+            # format_json({"type": "EXIT"})
             return {"type": "EXIT"}
         case _:
             print("Invalid SQL query")
             return None
 
-def format_json(query, file_name = 'query_list.json'):
+def format_json(query, file_name = 'data/query_list.json'):
     """This functions writes out SQL queries to a JSON file
 
     Args:
@@ -51,28 +51,10 @@ def format_json(query, file_name = 'query_list.json'):
         query_json = json.load(json_file)
 
     query_json['Queries'].append(query)
-    # match command[0]:
-    #     case 'CREATE':
-    #         query_json['Queries'].append(query)
-    #     case 'DROP':
-    #         query_json['Queries'].append(format_drop_query(command))
-    #     case 'USE':
-    #         query_json['Queries'].append(format_use_query(command))
-    #     case 'ALTER':
-    #         query_json['Queries'].append(format_alter_query(command))
-    #     case 'SELECT':
-    #         query_json['Queries'].append(format_select_query(command))  
-    #     case '.EXIT':
-    #         query_json['Queries'].append({"type": "EXIT"})
-    #         return not exit_program
-    #     case _:
-    #         print("Invalid SQL query")
         
     with open(file_name, "w") as f:
         json.dump(query_json, f, indent=4)
     
-
-
 def format_create_query(token_list): 
     """This function formats a SQL CREATE query into a JSON file
 
@@ -160,6 +142,9 @@ def format_select_query(token_list):
 
     return data
     
-def get_query_list():
-    with open("data/query_list.json", "r") as f:
-        return json.load(f) 
+def reset_query_list(): #resets the query list json file to a dictionary with an empty list
+    with open("data/query_list.json", "w") as json_file:
+        query_json = json.load(json_file)
+    query_json = { "Queries": [] }
+    with open("data/query_list.json", "w") as f:
+        json.dump(query_json, f, indent=4)
