@@ -133,10 +133,10 @@ while True:
     command = form.format_command(user_input)
     query = form.process_query(command)
 
-    if query == None: #program quit
+    if query == None: #Invalid sql query
         continue
-    elif query['type'] == 'EXIT':
+    elif query['type'] == 'EXIT': #program quit
         check_query(query)
         break
-    else:
+    else: #valid sql query, process it accordingly
         check_query(query)

@@ -13,6 +13,7 @@ def format_command(query):
     
     command = (list(filter(None,re.split(', |\s|;+|\((.+)\)', query))))
 
+
     return command
 
 def process_query(command):
