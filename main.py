@@ -14,6 +14,8 @@ import os
 # command_list = form.format_command(file_name)#create command list from SQL file
 # form.format_json(command_list,'data/query_list.json') #create list of all queries in json format
 
+curr_database = None #the current database in use
+
 def check_query(query):
     """This function processes SQL queries
 
@@ -23,7 +25,7 @@ def check_query(query):
     Returns:
         is_valid: returns true if the query was a valid SQL query and false otherwise
     """
-    curr_database = None #the current database in use
+    global curr_database
     match query['type']: 
         case 'CREATE':
             if query['request'] == 'DATABASE': #creating a database
