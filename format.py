@@ -33,6 +33,8 @@ def process_query(command):
         case 'SELECT':
             # format_json(format_select_query(command))
             return format_select_query(command)
+        case 'INSERT':
+            #return format_insert_query(command)
         case '.EXIT':
             # format_json({"type": "EXIT"})
             return {"type": "EXIT"}
@@ -142,7 +144,19 @@ def format_select_query(token_list):
     data['tableName'] = token_list[token_list.index('FROM') + 1] #the word after FROM is the table to select from
 
     return data
+
+def format_insert_query(token_list): #index 4 is variable list, index 2 is table name
+    value_list = list(filter(None,re.split(', |\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
+    with open("data/query formats/insert_query.json", "r") as f: #open default insert json to format new input
+            data = json.load(f)
+    data['tableName'] = token_list[2]
+
+    var_index = 0
+    while var_index < len(variable_list):#add the values that the user wants to insert into a list
+        data['variableValues'].append(value_list[var_index])
     
+    return data
+
 def reset_query_list(): #resets the query list json file to a dictionary with an empty list
     with open("data/query_list.json", "w") as json_file:
         query_json = json.load(json_file)
