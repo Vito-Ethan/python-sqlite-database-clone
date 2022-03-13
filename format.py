@@ -17,7 +17,7 @@ def format_command(query):
     return command
 
 def process_query(command):
-    match command[0]:
+    match command[0].upper():
         case 'CREATE':
             # format_json(format_create_query(command))
             return format_create_query(command)
@@ -35,6 +35,7 @@ def process_query(command):
             return format_select_query(command)
         case 'INSERT':
             #return format_insert_query(command)
+            return format_insert_query(command)
         case '.EXIT':
             # format_json({"type": "EXIT"})
             return {"type": "EXIT"}
@@ -49,7 +50,7 @@ def format_json(query, file_name = 'data/query_list.json'):
         commands (list): a list of tokenized SQL queries, each index representing one query
         file_name (.json): A JSON file that will store each SQL query
     """
-     #is the command a valid SQL query?
+    #is the command a valid SQL query?
     with open(file_name, "r") as json_file:
         query_json = json.load(json_file)
 
@@ -142,19 +143,17 @@ def format_select_query(token_list):
     if token_list[1] == '*':
         data['allColumns'] = True
     data['tableName'] = token_list[token_list.index('FROM') + 1] #the word after FROM is the table to select from
-
+    
     return data
 
 def format_insert_query(token_list): #index 4 is variable list, index 2 is table name
-    value_list = list(filter(None,re.split(', |\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
+    value_list = list(filter(None,re.split(',\s|\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
     with open("data/query formats/insert_query.json", "r") as f: #open default insert json to format new input
-            data = json.load(f)
+        data = json.load(f)
     data['tableName'] = token_list[2]
 
-    var_index = 0
-    while var_index < len(variable_list):#add the values that the user wants to insert into a list
-        data['variableValues'].append(value_list[var_index])
-    
+    for index, value in enumerate(value_list):#add the values that the user wants to insert into a list
+        data['variableValues'].append(value_list[index])
     return data
 
 def reset_query_list(): #resets the query list json file to a dictionary with an empty list
