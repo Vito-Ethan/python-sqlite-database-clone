@@ -126,6 +126,17 @@ def check_query(query):
                         variable_list.append({"datatype": query['format']['ADD']['variables'][0]['datatype']})
                         json.dump(variable_list, json_table_file, indent=4)
                     print(f"Table {table_name} modified.")
+        case 'INSERT':
+            table_name = query['tableName']
+            if curr_database == None:
+                print("!Failed to insert into table, no database selected.")
+            else:
+                if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
+                    print(f"!Failed to insert into table {table_name} because it does not exist.")
+                else:
+                    with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
+                        #need to add functionality to append values into csv for the table.
+
         case 'EXIT':
             print("\nprogram termination")
 
