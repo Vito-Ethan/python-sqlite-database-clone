@@ -134,9 +134,12 @@ def check_query(query):
                 if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
                     print(f"!Failed to insert into table {table_name} because it does not exist.")
                 else:
-                    with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
-                        #need to add functionality to append values into csv for the table.
-
+                    with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
+                        csv_reader = csv.reader(csv_table_file)
+                        rows = list(csv_reader)
+                    with open(curr_database + "/" + table_name + ".csv", 'a', newline='') as csv_table_file: #append values to end of file
+                        csv_writer = csv.writer(csv_table_file)
+                        csv_writer.writerow(query['variableValues'])
         case 'EXIT':
             print("\nprogram termination")
 
