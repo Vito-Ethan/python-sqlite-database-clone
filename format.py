@@ -142,8 +142,15 @@ def format_select_query(token_list):
     
     if token_list[1] == '*':
         data['allColumns'] = True
-    data['tableName'] = token_list[token_list.index('FROM') + 1] #the word after FROM is the table to select from
-    
+    else:
+        data['allColumns'] = False
+    #use list comprehension to to lower all things. take the elemenet after from which is the table name
+
+    temp = [x.lower() for x in token_list] #check against this, to not worry about being case-sensitive for query
+    print(temp)
+
+    data['tableName'] = token_list[temp.index('from') + 1] #the word after FROM is the table to select from
+
     return data
 
 def format_insert_query(token_list): #index 4 is variable list, index 2 is table name
