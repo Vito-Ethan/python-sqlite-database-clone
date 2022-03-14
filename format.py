@@ -146,7 +146,7 @@ def format_select_query(token_list):
         data['allColumns'] = False
     #use list comprehension to to lower all things. take the elemenet after from which is the table name
 
-    temp = [x.lower() for x in token_list] #check against this, to not worry about being case-sensitive for query
+    temp = [x.upper() for x in token_list] #check against this, to not worry about being case-sensitive for query
     print(temp)
 
     data['tableName'] = token_list[temp.index('from') + 1] #the word after FROM is the table to select from
