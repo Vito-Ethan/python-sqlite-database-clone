@@ -96,13 +96,15 @@ def check_query(query):
                         with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                             csv_reader = csv.reader(csv_table_file)
                             fields = next(csv_reader) #read in field names and store as a list
-                        with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
-                            datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
-                            for i in range(len(fields)):
-                                if not i == (len(fields) - 1): #this makes sure that a | does not print after the last field
-                                    print(f"{fields[i]} {datatype_list[i]['datatype']} | ", end='') #match the field with its datatype
-                                else:
-                                    print(f"{fields[i]} {datatype_list[i]['datatype']}")
+                            with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
+                                datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                                for i in range(len(fields)):
+                                    if i == (len(fields) - 1): #this makes sure that a | does not print after the last field
+                                        print(f"{fields[i]} {datatype_list[i]['datatype']}")
+                                    else:
+                                        print(f"{fields[i]} {datatype_list[i]['datatype']} | ", end='') #match the field with its datatype
+                                for line in csv_reader: #each line in the csv_reader is a list, so print the attributes values
+                                    print(" | ".join(line)) #join each element in line with ' | '
                     # else: #if we are choosing specific columns instead.
         case 'ALTER TABLE':
             table_name = query['format']['ADD']['name']
@@ -134,9 +136,6 @@ def check_query(query):
                 if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
                     print(f"!Failed to insert into table {table_name} because it does not exist.")
                 else:
-                    with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
-                        csv_reader = csv.reader(csv_table_file)
-                        rows = list(csv_reader)
                     with open(curr_database + "/" + table_name + ".csv", 'a', newline='') as csv_table_file: #append values to end of file
                         csv_writer = csv.writer(csv_table_file)
                         csv_writer.writerow(query['variableValues'])
