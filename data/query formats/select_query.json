@@ -4,5 +4,10 @@
     "columns": [
 
     ],
-    "tableName": null
+    "tableName": null,
+    "where": {
+        "attribute": null,
+        "operator": null,
+        "value": null
+    }
 }
