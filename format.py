@@ -146,11 +146,11 @@ def format_select_query(token_list):
         data['allColumns'] = True
     else:
         data['allColumns'] = False
-        where_index = temp.index('WHERE')
-
-        data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
-        data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
-        data['where']['value'] = token_list[where_index + 3]
+        if 'WHERE' in temp:
+            where_index = temp.index('WHERE')
+            data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
+            data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
+            data['where']['value'] = token_list[where_index + 3]
     
     column_list = token_list[1:temp.index('FROM')] # store all the values  
 
@@ -168,6 +168,10 @@ def format_insert_query(token_list): #index 4 is variable list, index 2 is table
     for index, value in enumerate(value_list):#add the values that the user wants to insert into a list
         data['variableValues'].append(value_list[index])
     return data
+
+def format_delete_query(token_list):
+
+def format_update_query(token_list):
 
 def reset_query_list(): #resets the query list json file to a dictionary with an empty list
     with open("data/query_list.json", "w") as json_file:
