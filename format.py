@@ -137,6 +137,8 @@ def format_alter_query(token_list):
     return data
 
 def format_select_query(token_list):
+    #use list comprehension to lower() all things. take the elemenet after from which is the table name
+    temp = [x.upper() for x in token_list] #check against this, to not worry about being case-sensitive for query
     with open("data/query formats/select_query.json", "r") as f:
         data = json.load(f)
     
@@ -144,22 +146,16 @@ def format_select_query(token_list):
         data['allColumns'] = True
     else:
         data['allColumns'] = False
-    #use list comprehension to to lower all things. take the elemenet after from which is the table name
+        where_index = temp.index('WHERE')
 
-    temp = [x.upper() for x in token_list] #check against this, to not worry about being case-sensitive for query
+        data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
+        data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
+        data['where']['value'] = token_list[where_index + 3]
+    
     column_list = token_list[1:temp.index('FROM')] # store all the values  
-    where_index = temp.index('WHERE')
-
-    data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
-    data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
-    data['where']['value'] = token_list[where_index + 3]
-
-    print(data['where'])
 
     data['columns'] = column_list
     data['tableName'] = token_list[temp.index('FROM') + 1] #the word after FROM is the table to select from
-    print(data['columns'])
-
 
     return data
 
