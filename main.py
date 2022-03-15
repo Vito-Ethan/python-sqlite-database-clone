@@ -16,6 +16,21 @@ import os
 
 curr_database = None #the current database in use
 
+def match_where(column, operator, value):
+    match operator:
+        case '=':
+            return True if column == value else False
+        case '!=':
+            return True if column != value else False
+        case '>':
+            return True if column > value else False
+        case '<':
+            return True if column < value else False
+        case '>=':
+            return True if column >= value else False
+        case '<=':
+            return True if column <= value else False
+
 def check_query(query):
     """This function processes SQL queries
 
@@ -145,61 +160,14 @@ def check_query(query):
                                     print() #print newlien for formatting
                                     match_column = fields.index(where_column) #check where clause against specific column
                                     for row in csv_reader: #loop through each record in the csv
-                                        match operator:
-                                                case '=':
-                                                    if float(row[match_column]) == float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
-                                                case '!=':
-                                                    if float(row[match_column]) != float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
-                                                case '>':
-                                                    if float(row[match_column]) > float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
-                                                case '<':
-                                                    if float(row[match_column]) < float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
-                                                case '>=':
-                                                    if float(row[match_column]) >= float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
-                                                case '<':
-                                                    if float(row[match_column]) <= float(where_value):
-                                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                            print(row[index_columns[i]], end='')
-                                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                                print(' | ',end='')
-                                                        print()
-                                                    else:
-                                                        pass
+                                        if match_where(float(row[match_column]), operator, float(where_value)):
+                                            for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                print(row[index_columns[i]], end='')
+                                                if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                    print(' | ',end='')
+                                            print()
+                                        else:
+                                            continue
         case 'ALTER TABLE':
             table_name = query['format']['ADD']['name']
 
@@ -233,6 +201,15 @@ def check_query(query):
                     with open(curr_database + "/" + table_name + ".csv", 'a', newline='') as csv_table_file: #append values to end of file
                         csv_writer = csv.writer(csv_table_file)
                         csv_writer.writerow(query['variableValues'])
+        # case 'UPDATE':
+        #     table_name = query['tableName']
+        #     if curr_database == None:
+        #         print("!Failed to update table, no database selected.")
+        #     else:
+        #         if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
+        #             print(f"!Failed to insert into table {table_name} because it does not exist.")
+        #         else:
+
         case 'EXIT':
             print("\nprogram termination")
 
