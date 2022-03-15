@@ -1,0 +1,9 @@
+{
+    "type": "DELETE",
+    "tableName": null,
+    "where": {
+        "attribute": null,
+        "operator": null,
+        "value": null
+    }
+}
