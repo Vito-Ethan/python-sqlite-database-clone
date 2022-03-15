@@ -36,6 +36,8 @@ def process_query(command):
         case 'INSERT':
             #return format_insert_query(command)
             return format_insert_query(command)
+        case 'UPDATE':
+            return format_update_query(command)
         case '.EXIT':
             # format_json({"type": "EXIT"})
             return {"type": "EXIT"}
@@ -150,7 +152,7 @@ def format_select_query(token_list):
             where_index = temp.index('WHERE')
             data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
             data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
-            data['where']['value'] = token_list[where_index + 3]
+            data['where']['value'] = token_list[where_index + 3] 
     
     column_list = token_list[1:temp.index('FROM')] # store all the values  
 
@@ -169,9 +171,34 @@ def format_insert_query(token_list): #index 4 is variable list, index 2 is table
         data['variableValues'].append(value_list[index])
     return data
 
-def format_delete_query(token_list):
+# def format_delete_query(token_list):
+
 
 def format_update_query(token_list):
+    temp = [x.upper() for x in token_list] #check against this, to not worry about being case-sensitive for query
+    with open("data/query formats/update_query.json", "r") as f: #open default insert json to format new input
+        data = json.load(f)
+    data['tableName'] = token_list[1]
+    
+    start = 3 #the start of the list columns we are setting a value
+    end = temp.index('WHERE') #the last column we are setting values for will appear one index before where
+
+    set_list = token_list[start:end]
+    print(set_list)
+
+    for i in range(0, len(set_list), 3):
+        data['set'].append({"attribute": set_list[i],
+                                "operator": set_list[i + 1],
+                                "value": set_list[i + 2] })
+
+    data['where']['attribute'] = token_list[end + 1] #store the column name we are matching against
+    data['where']['operator'] = token_list[end + 2] #store the operator we are checking values with
+    data['where']['value'] = token_list[end + 3]
+
+    print(data)
+
+    return data
+
 
 def reset_query_list(): #resets the query list json file to a dictionary with an empty list
     with open("data/query_list.json", "w") as json_file:
