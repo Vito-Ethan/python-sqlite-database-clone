@@ -99,13 +99,87 @@ def check_query(query):
                             with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
                                 datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
                                 for i in range(len(fields)):
-                                    if i == (len(fields) - 1): #this makes sure that a | does not print after the last field
-                                        print(f"{fields[i]} {datatype_list[i]['datatype']}")
-                                    else:
-                                        print(f"{fields[i]} {datatype_list[i]['datatype']} | ", end='') #match the field with its datatype
+                                    print(f"{fields[i]} {datatype_list[i]['datatype']}", end='')
+                                    if i != (len(fields) - 1):
+                                        print(' | ',end='')
+                                print()
                                 for line in csv_reader: #each line in the csv_reader is a list, so print the attributes values
                                     print(" | ".join(line)) #join each element in line with ' | '
-                    # else: #if we are choosing specific columns instead.
+                    else: #if we are selecting specific columns
+                        columns = query['columns']
+                        operator = query['where']['operator'] #store the operator the where clause is matching against
+                        where_column = query['where']['attribute'] #store the column name 
+                        where_value = query['where']['value'] #store the value in the where cluase
+                        index_columns = [] #this will store the indexes of the columns (based on the csv) the user has selected
+                        with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
+                            csv_reader = csv.reader(csv_table_file)
+                            fields = next(csv_reader) #read in field names and store as a list
+                            with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
+                                datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                                for i, column_name in enumerate(columns):
+                                    field_index = fields.index(column_name) #holds the index where a specific column name appears in the csv
+                                    index_columns.append(field_index)
+                                    print(f"{column_name} {datatype_list[field_index]['datatype']}", end='')
+                                    if i != (len(columns) - 1):
+                                        print(' | ',end='')
+                                print() #print newlien for formatting
+                                match_column = fields.index(where_column) #check where clause against specific column
+                                for row in csv_reader: #loop through each record in the csv
+                                    match operator:
+                                            case '=':
+                                                if row[match_column] == where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
+                                            case '!=':
+                                                if row[match_column] != where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
+                                            case '>':
+                                                if row[match_column] > where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
+                                            case '<':
+                                                if row[match_column] < where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
+                                            case '>=':
+                                                if row[match_column] >= where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
+                                            case '<':
+                                                if row[match_column] <= where_value:
+                                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                                        print(row[index_columns[i]], end='')
+                                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
+                                                            print(' | ',end='')
+                                                        print()
+                                                else:
+                                                    pass
         case 'ALTER TABLE':
             table_name = query['format']['ADD']['name']
 
