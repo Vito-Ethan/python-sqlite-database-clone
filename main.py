@@ -17,6 +17,11 @@ import os
 curr_database = None #the current database in use
 
 def match_where(column, operator, value):
+    if isinstance(column, int):
+        float(column)
+    if isinstance(value, int):
+        float(value)
+
     match operator:
         case '=':
             return True if column == value else False
@@ -160,7 +165,7 @@ def check_query(query):
                                     print() #print newlien for formatting
                                     match_column = fields.index(where_column) #check where clause against specific column
                                     for row in csv_reader: #loop through each record in the csv
-                                        if match_where(float(row[match_column]), operator, float(where_value)):
+                                        if match_where(row[match_column], operator, where_value):
                                             for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
                                                 print(row[index_columns[i]], end='')
                                                 if i != (len(columns) - 1): #only print the bar if it isnt the last element
@@ -201,15 +206,35 @@ def check_query(query):
                     with open(curr_database + "/" + table_name + ".csv", 'a', newline='') as csv_table_file: #append values to end of file
                         csv_writer = csv.writer(csv_table_file)
                         csv_writer.writerow(query['variableValues'])
-        # case 'UPDATE':
-        #     table_name = query['tableName']
-        #     if curr_database == None:
-        #         print("!Failed to update table, no database selected.")
-        #     else:
-        #         if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
-        #             print(f"!Failed to insert into table {table_name} because it does not exist.")
-        #         else:
-
+                    print("1 new record inserted.")
+        case 'UPDATE':
+            table_name = query['tableName']
+            where_column = query['where']['attribute'] #store the column name 
+            where_value = query['where']['value'] #store the value in the where cluase
+            operator = query['where']['operator']
+            if curr_database == None:
+                print("!Failed to update table, no database selected.")
+            else:
+                if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
+                    print(f"!Failed to insert into table {table_name} because it does not exist.")
+                else:
+                    with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
+                        csv_reader = csv.reader(csv_table_file)
+                        records = list(csv_reader)
+                    with open(curr_database + "/" + table_name + ".csv", 'w') as csv_table_file:
+                        csv_writer = csv.writer(csv_table_file)
+                        match_column = records[0].index(where_column) #check where clause against specific column
+                        records_updated = 0
+                    
+                        for row, value in enumerate(records):
+                            if match_where(value[match_column], operator, where_value): #does the record match the where clause query?
+                                for i in range(len(query['set'])): #loop through all the columns user wants to change
+                                    column = records[0].index(query['set'][i]['attribute']) #find the index of the column the user wants to update 
+                                    value[column] = query['set'][i]['value'] #assign a new value to a specific column in the csv
+                                    records[row][column] = value[column] #update records to reflect the change to the specific column value 
+                                records_updated += 1
+                        print(f"{records_updated} records updated") if records_updated > 1 else print(f"{records_updated} record updated")
+                        csv_writer.writerows(records) #write back the update values to the csv
         case 'EXIT':
             print("\nprogram termination")
 
