@@ -2,11 +2,6 @@
     "type": "UPDATE",
     "tableName": null,
     "set": [
-        {
-            "attribute": null,
-            "operator": null,
-            "value": null 
-        }
     ],
     "where": {
         "attribute": null,

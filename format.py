@@ -184,7 +184,6 @@ def format_update_query(token_list):
     end = temp.index('WHERE') #the last column we are setting values for will appear one index before where
 
     set_list = token_list[start:end]
-    print(set_list)
 
     for i in range(0, len(set_list), 3):
         data['set'].append({"attribute": set_list[i],
@@ -194,8 +193,6 @@ def format_update_query(token_list):
     data['where']['attribute'] = token_list[end + 1] #store the column name we are matching against
     data['where']['operator'] = token_list[end + 2] #store the operator we are checking values with
     data['where']['value'] = token_list[end + 3]
-
-    print(data)
 
     return data
 
