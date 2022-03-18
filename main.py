@@ -267,7 +267,7 @@ def check_query(query):
                                     records[row][column] = query['set'][i]['value'] #update records to reflect the change to the specific column value 
                                 records_updated += 1
                             row += 1
-                        print(f"{records_updated} records updated") if records_updated > 1 else print(f"{records_updated} record updated")
+                        print(f"{records_updated} records modified") if records_updated > 1 else print(f"{records_updated} record modified")
                         csv_writer.writerows(records) #write back the update values to the csv
         case 'DELETE':
             table_name = query['tableName']
