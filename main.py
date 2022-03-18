@@ -110,15 +110,15 @@ def check_query(query):
                     if selectAll:
                         with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                             csv_reader = csv.reader(csv_table_file)
-                            fields = next(csv_reader) #read in field names and store as a list
+                            records = list(csv_reader)
                             with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
                                 datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
-                                for i in range(len(fields)):
-                                    print(f"{fields[i]} {datatype_list[i]['datatype']}", end='')
-                                    if i != (len(fields) - 1):
+                                for i in range(len(records[0])):
+                                    print(f"{records[0][i]} {datatype_list[i]['datatype']}", end='')
+                                    if i != (len(records[0]) - 1):
                                         print(' | ',end='')
                                 print()
-                                for line in csv_reader: #each line in the csv_reader is a list, so print the attributes values
+                                for line in records[1:]: #each line in the csv_reader is a list, so print the attributes values
                                     print(" | ".join(line)) #join each element in line with ' | '
                     else: #if we are selecting specific columns
                         columns = query['columns']
@@ -126,17 +126,17 @@ def check_query(query):
                         if query['where']['attribute'] == None: #if select query doesn't use where clause
                             with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                                 csv_reader = csv.reader(csv_table_file)
-                                fields = next(csv_reader) #read in field names and store as a list
+                                records = list(csv_reader)
                                 with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
                                     datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
                                     for i, column_name in enumerate(columns):
-                                        field_index = fields.index(column_name) #holds the index where a specific column name appears in the csv
+                                        field_index = records[0].index(column_name) #holds the index where a specific column name appears in the csv
                                         index_columns.append(field_index)
                                         print(f"{column_name} {datatype_list[field_index]['datatype']}", end='')
                                         if i != (len(columns) - 1):
                                             print(' | ',end='')
                                     print() #print newlien for formatting
-                                    for row in csv_reader: #loop through each record in the csv
+                                    for row in records[1:]: #loop through each record in the csv
                                         for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
                                             print(row[index_columns[i]], end='')
                                             if i != (len(columns) - 1): #only print the bar if it isnt the last element
@@ -146,28 +146,47 @@ def check_query(query):
                             operator = query['where']['operator'] #store the operator the where clause is matching against
                             where_column = query['where']['attribute'] #store the column name 
                             where_value = query['where']['value'] #store the value in the where cluase
+                            table_types = [] #will hold the datatypes for each column in the table
                             with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                                 csv_reader = csv.reader(csv_table_file)
-                                fields = next(csv_reader) #read in field names and store as a list
+                                records = list(csv_reader)
                                 with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
                                     datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                                    for entry in datatype_list: #store the datatypes of each column in a list
+                                        if entry['datatype'] == 'int':
+                                            table_types.append(int)
+                                        elif entry['datatype'] == 'varchar(20)':
+                                            table_types.append(str)
+                                        elif entry['datatype'] == 'float':
+                                            table_types.append(float)
                                     for i, column_name in enumerate(columns):
-                                        field_index = fields.index(column_name) #holds the index where a specific column name appears in the csv
+                                        field_index = records[0].index(column_name) #holds the index where a specific column name appears in the csv
                                         index_columns.append(field_index)
                                         print(f"{column_name} {datatype_list[field_index]['datatype']}", end='')
                                         if i != (len(columns) - 1):
                                             print(' | ',end='')
                                     print() #print newlien for formatting
-                                    match_column = fields.index(where_column) #check where clause against specific column
-                                    for row in csv_reader: #loop through each record in the csv
-                                        if match_where(row[match_column], operator, where_value):
+                                    match_column = records[0].index(where_column) #check where clause against specific column
+                                    column_type = table_types[match_column]
+
+                                    row = 1
+                                    while row <= len(records[1:]): #print out the records that match the select query
+                                        column_value = records[row][match_column]
+                                        if column_type == int: #python converts csv values to strings so we need to typecast values based on how the table is structured
+                                            column_value = int(column_value)
+                                            where_value = float(where_value)
+                                        elif column_type == float:
+                                            column_value = float(column_value)
+                                            where_value = float(where_value)
+                                        elif column_type == str:
+                                            pass #nothing needs to be done
+                                        if match_where(column_value, operator, where_value):
                                             for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                                print(row[index_columns[i]], end='')
+                                                print(records[row][index_columns[i]], end='')
                                                 if i != (len(columns) - 1): #only print the bar if it isnt the last element
                                                     print(' | ',end='')
                                             print()
-                                        else:
-                                            continue
+                                        row += 1
         case 'ALTER TABLE':
             table_name = query['format']['ADD']['name']
             if curr_database == None:
@@ -177,7 +196,7 @@ def check_query(query):
                     print(f"!Failed to alter table {table_name} because it does not exist.")
                 else: #adding more fields to table
                     with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
-                        variable_list = json.load(json_table_file)
+                        datatype_list = json.load(json_table_file)
                     with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                         csv_reader = csv.reader(csv_table_file)
                         rows = list(csv_reader) 
@@ -186,8 +205,8 @@ def check_query(query):
                         csv_writer = csv.writer(csv_table_file)
                         csv_writer.writerows(rows) #write back all the data to the csv.
                     with open(curr_database + "/" + table_name + ".json", 'w') as json_table_file:
-                        variable_list.append({"datatype": query['format']['ADD']['variables'][0]['datatype']})
-                        json.dump(variable_list, json_table_file, indent=4)
+                        datatype_list.append({"datatype": query['format']['ADD']['variables'][0]['datatype']})
+                        json.dump(datatype_list, json_table_file, indent=4)
                     print(f"Table {table_name} modified.")
         case 'INSERT':
             table_name = query['tableName']
@@ -214,8 +233,8 @@ def check_query(query):
                     print(f"!Failed to insert into table {table_name} because it does not exist.")
                 else:
                     with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
-                        variable_list = json.load(json_table_file)
-                    for entry in variable_list:
+                        datatype_list = json.load(json_table_file)
+                    for entry in datatype_list:#store the datatypes of each column in a list
                         if entry['datatype'] == 'int':
                             table_types.append(int)
                         elif entry['datatype'] == 'varchar(20)':
@@ -263,8 +282,8 @@ def check_query(query):
                     print(f"!Failed to delete record from table {table_name} because it does not exist.")
                 else:
                     with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
-                        variable_list = json.load(json_table_file)
-                    for entry in variable_list:
+                        datatype_list = json.load(json_table_file)
+                    for entry in datatype_list:#store the datatypes of each column in a list
                         if entry['datatype'] == 'int':
                             table_types.append(int)
                         elif entry['datatype'] == 'varchar(20)':
