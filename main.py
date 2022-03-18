@@ -17,11 +17,6 @@ import os
 curr_database = None #the current database in use
 
 def match_where(column, operator, value):
-    if isinstance(column, int):
-        float(column)
-    if isinstance(value, int):
-        float(value)
-
     match operator:
         case '=':
             return True if column == value else False
@@ -175,7 +170,6 @@ def check_query(query):
                                             continue
         case 'ALTER TABLE':
             table_name = query['format']['ADD']['name']
-
             if curr_database == None:
                 print("!Failed to alter table, no database selected.")
             else:
@@ -212,29 +206,98 @@ def check_query(query):
             where_column = query['where']['attribute'] #store the column name 
             where_value = query['where']['value'] #store the value in the where cluase
             operator = query['where']['operator']
+            table_types = [] #will hold the datatypes for each column in the table
             if curr_database == None:
                 print("!Failed to update table, no database selected.")
             else:
                 if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
                     print(f"!Failed to insert into table {table_name} because it does not exist.")
                 else:
+                    with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
+                        variable_list = json.load(json_table_file)
+                    for entry in variable_list:
+                        if entry['datatype'] == 'int':
+                            table_types.append(int)
+                        elif entry['datatype'] == 'varchar(20)':
+                            table_types.append(str)
+                        elif entry['datatype'] == 'float':
+                            table_types.append(float)
                     with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                         csv_reader = csv.reader(csv_table_file)
                         records = list(csv_reader)
                     with open(curr_database + "/" + table_name + ".csv", 'w') as csv_table_file:
                         csv_writer = csv.writer(csv_table_file)
                         match_column = records[0].index(where_column) #check where clause against specific column
+                        column_type = table_types[match_column] #holds the datatype of the column we are checking against
                         records_updated = 0
-                    
-                        for row, value in enumerate(records):
-                            if match_where(value[match_column], operator, where_value): #does the record match the where clause query?
+
+                        row = 1
+                        while row <= len(records[1:]):
+                            column_value = records[row][match_column]
+                            if column_type == int:
+                                column_value = int(column_value)
+                                where_value = float(where_value)
+                            elif column_type == float:
+                                column_value = float(column_value)
+                                where_value = float(where_value)
+                            elif column_type == str:
+                                pass #nothing needs to be done
+                            if match_where(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
                                 for i in range(len(query['set'])): #loop through all the columns user wants to change
                                     column = records[0].index(query['set'][i]['attribute']) #find the index of the column the user wants to update 
-                                    value[column] = query['set'][i]['value'] #assign a new value to a specific column in the csv
-                                    records[row][column] = value[column] #update records to reflect the change to the specific column value 
+                                    records[row][column] = query['set'][i]['value'] #update records to reflect the change to the specific column value 
                                 records_updated += 1
+                            row += 1
                         print(f"{records_updated} records updated") if records_updated > 1 else print(f"{records_updated} record updated")
                         csv_writer.writerows(records) #write back the update values to the csv
+        case 'DELETE':
+            table_name = query['tableName']
+            where_column = query['where']['attribute'] #store the column name 
+            where_value = query['where']['value'] #store the value in the where cluase
+            operator = query['where']['operator']
+            table_types = [] #will hold the datatypes for each column in the table
+            if curr_database == None:
+                print("!Failed to delete record, no database selected.")
+            else:
+                if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
+                    print(f"!Failed to delete record from table {table_name} because it does not exist.")
+                else:
+                    with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file:
+                        variable_list = json.load(json_table_file)
+                    for entry in variable_list:
+                        if entry['datatype'] == 'int':
+                            table_types.append(int)
+                        elif entry['datatype'] == 'varchar(20)':
+                            table_types.append(str)
+                        elif entry['datatype'] == 'float':
+                            table_types.append(float)
+                    with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
+                        csv_reader = csv.reader(csv_table_file)
+                        records = list(csv_reader)
+                    with open(curr_database + "/" + table_name + ".csv", 'w') as csv_table_file:
+                        csv_writer = csv.writer(csv_table_file)
+                        match_column = records[0].index(where_column) #check where clause against specific column
+                        column_type = table_types[match_column] #holds the datatype of the column we are checking against
+                        records_deleted = 0
+                        
+                        row = 1
+                        while row <= len(records[1:]):
+                            column_value = records[row][match_column]
+                            if column_type == int:
+                                column_value = int(column_value)
+                                where_value = float(where_value)
+                            elif column_type == float:
+                                column_value = float(column_value)
+                                where_value = float(where_value)
+                            elif column_type == str:
+                                pass #nothing needs to be done
+                            if match_where(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
+                                del records[row] #remove the record entry from the table
+                                row -= 1 #decrement row count so we don't end up an index ahead from where we should be
+                                records_deleted += 1
+                            row += 1
+                        print(f"{records_deleted} records deleted") if records_deleted > 1 else print(f"{records_deleted} record deleted")
+                        csv_writer.writerows(records) #write back the new table 
         case 'EXIT':
             print("\nprogram termination")
 
