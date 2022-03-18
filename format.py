@@ -38,6 +38,8 @@ def process_query(command):
             return format_insert_query(command)
         case 'UPDATE':
             return format_update_query(command)
+        case 'DELETE':
+            return format_delete_query(command)
         case '.EXIT':
             # format_json({"type": "EXIT"})
             return {"type": "EXIT"}
@@ -171,7 +173,18 @@ def format_insert_query(token_list): #index 4 is variable list, index 2 is table
         data['variableValues'].append(value_list[index])
     return data
 
-# def format_delete_query(token_list):
+def format_delete_query(token_list):
+    with open("data/query formats/delete_query.json", "r") as f: #open default insert json to format new input
+        data = json.load(f)
+    data['tableName'] = token_list[2]
+
+    where_index = 3
+
+    data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
+    data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
+    data['where']['value'] = token_list[where_index + 3]
+
+    return data
 
 
 def format_update_query(token_list):
