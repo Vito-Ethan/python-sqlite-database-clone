@@ -163,7 +163,7 @@ def format_select_query(token_list):
 
     return data
 
-def format_insert_query(token_list): #index 4 is variable list, index 2 is table name
+def format_insert_query(token_list): 
     value_list = list(filter(None,re.split(',\s|\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
     with open("data/query formats/insert_query.json", "r") as f: #open default insert json to format new input
         data = json.load(f)
@@ -198,7 +198,7 @@ def format_update_query(token_list):
 
     set_list = token_list[start:end]
 
-    for i in range(0, len(set_list), 3):
+    for i in range(0, len(set_list), 3): #format the set part of the query
         data['set'].append({"attribute": set_list[i],
                                 "operator": set_list[i + 1],
                                 "value": set_list[i + 2] })
