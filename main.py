@@ -17,6 +17,16 @@ import os
 curr_database = None #the current database in use
 
 def match_where(column, operator, value):
+    """This function evalutaes a where query on a tuple in a table
+
+    Args:
+        column (string, float, int): represents the value of a column in a tuple
+        operator (string): represents the operator in a where query (e.g >, <)
+        value (int, string, float): the value the where query is matching against
+
+    Returns:
+        boolean: based on evaluation of where query
+    """
     match operator:
         case '=':
             return True if column == value else False
@@ -252,7 +262,7 @@ def check_query(query):
 
                         row = 1
                         while row <= len(records[1:]):
-                            column_value = records[row][match_column]
+                            column_value = records[row][match_column] #type cast the column value
                             if column_type == int:
                                 column_value = int(column_value)
                                 where_value = float(where_value)
@@ -301,7 +311,7 @@ def check_query(query):
                         
                         row = 1
                         while row <= len(records[1:]):
-                            column_value = records[row][match_column]
+                            column_value = records[row][match_column] #type cast the column value
                             if column_type == int:
                                 column_value = int(column_value)
                                 where_value = float(where_value)
