@@ -1,13 +1,25 @@
 {
     "type": "SELECT",
     "allColumns": null,
+    "isJoin": false,
     "columns": [
 
     ],
     "tableName": null,
+    "tables": [
+
+    ],
     "where": {
         "attribute": null,
         "operator": null,
         "value": null
-    }
+    },
+    "on": {
+        "attribute": null,
+        "operator": null,
+        "value": null
+    },
+    "aliasList":[
+
+    ]
 }
