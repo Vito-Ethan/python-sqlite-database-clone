@@ -146,21 +146,28 @@ def format_select_query(token_list):
     with open("data/query formats/select_query.json", "r") as f:
         data = json.load(f)
     
+    from_index = temp.index('FROM')
+    
+    if 'WHERE' in temp:
+        where_index = temp.index('WHERE')
+        data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
+        data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
+        data['where']['value'] = token_list[where_index + 3]
+        if (where_index - from_index) > 2 and 'INNER' not in temp and 'LEFT': #join query (not using join statement), so store the aliases for the table names
+            data['tables'] = token_list[from_index + 1:where_index:2]
+            data['aliasList'] = token_list[from_index + 2:where_index:2]#aliases are two indexes apart so jump by 2 indexes
+            data['isJoin'] = True
+
     if token_list[1] == '*':
         data['allColumns'] = True
     else:
         data['allColumns'] = False
-        if 'WHERE' in temp:
-            where_index = temp.index('WHERE')
-            data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
-            data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
-            data['where']['value'] = token_list[where_index + 3] 
-    
-    column_list = token_list[1:temp.index('FROM')] # store all the values  
+        column_list = token_list[1:from_index] # store all the values  
+        data['columns'] = column_list
+    if not data['isJoin']:#if the select isn't joining tables then there is only one table selected
+        data['tableName'] = token_list[from_index + 1] #the word after FROM is the table to select from
 
-    data['columns'] = column_list
-    data['tableName'] = token_list[temp.index('FROM') + 1] #the word after FROM is the table to select from
-
+    print(data)
     return data
 
 def format_insert_query(token_list): 
