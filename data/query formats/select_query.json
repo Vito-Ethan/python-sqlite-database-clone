@@ -2,6 +2,10 @@
     "type": "SELECT",
     "allColumns": null,
     "isJoin": false,
+    "joinType":{
+        "isInner": false,
+        "isLeft": false
+    },
     "columns": [
 
     ],
