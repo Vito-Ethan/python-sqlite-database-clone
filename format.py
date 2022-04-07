@@ -31,7 +31,7 @@ def process_query(command):
             # format_json(format_alter_query(command))
             return format_alter_query(command)
         case 'SELECT':
-            # format_json(format_select_query(command))
+            format_json(format_select_query(command))
             return format_select_query(command)
         case 'INSERT':
             #return format_insert_query(command)
@@ -153,10 +153,24 @@ def format_select_query(token_list):
         data['where']['attribute'] = token_list[where_index + 1] #store the column name we are matching against
         data['where']['operator'] = token_list[where_index + 2] #store the operator we are checking values with
         data['where']['value'] = token_list[where_index + 3]
-        if (where_index - from_index) > 2 and 'INNER' not in temp and 'LEFT': #join query (not using join statement), so store the aliases for the table names
+        if (where_index - from_index) > 2: #join query (not using join statement), so store the aliases for the table names
             data['tables'] = token_list[from_index + 1:where_index:2]
             data['aliasList'] = token_list[from_index + 2:where_index:2]#aliases are two indexes apart so jump by 2 indexes
             data['isJoin'] = True
+    elif 'ON' in temp:
+        on_index = temp.index('ON')
+        data['isJoin'] = True
+        data['on']['attribute'] = token_list[on_index + 1] #store the attribute we are matching against
+        data['on']['operator'] = token_list[on_index + 2] #store the operator we are evaluating with
+        data['on']['value'] = token_list[on_index + 3] #store the second attribute we are matching against
+        if 'INNER' in temp: #check type of join we're performing
+            data['joinType']['isInner'] = True
+            data['tables'] = token_list[from_index + 1:on_index:4] 
+            data['aliasList'] = token_list[from_index + 2:on_index:4] #store table aliases
+        elif 'LEFT' in temp:
+            data['joinType']['isLeft'] = True
+            data['tables'] = token_list[from_index + 1:on_index:5] 
+            data['aliasList'] = token_list[from_index + 2:on_index:5] #store table aliases
 
     if token_list[1] == '*':
         data['allColumns'] = True
