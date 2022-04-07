@@ -16,7 +16,7 @@ import os
 
 curr_database = None #the current database in use
 
-def match_where(column, operator, value):
+def eval_expression(column, operator, value):
     """This function evalutaes a where query on a tuple in a table
 
     Args:
@@ -110,7 +110,6 @@ def check_query(query):
         case 'SELECT':
             table_name = query['tableName']
             selectAll = query['allColumns']
-
             if curr_database == None:
                 print("!Failed to select columns, no database selected.")
             else:
@@ -190,7 +189,7 @@ def check_query(query):
                                             where_value = float(where_value)
                                         elif column_type == str:
                                             pass #nothing needs to be done
-                                        if match_where(column_value, operator, where_value):
+                                        if eval_expression(column_value, operator, where_value):
                                             for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
                                                 print(records[row][index_columns[i]], end='')
                                                 if i != (len(columns) - 1): #only print the bar if it isnt the last element
@@ -271,7 +270,7 @@ def check_query(query):
                                 where_value = float(where_value)
                             elif column_type == str:
                                 pass #nothing needs to be done
-                            if match_where(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
+                            if eval_expression(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
                                 for i in range(len(query['set'])): #loop through all the columns user wants to change
                                     column = records[0].index(query['set'][i]['attribute']) #find the index of the column the user wants to update 
                                     records[row][column] = query['set'][i]['value'] #update records to reflect the change to the specific column value 
@@ -320,7 +319,7 @@ def check_query(query):
                                 where_value = float(where_value)
                             elif column_type == str:
                                 pass #nothing needs to be done
-                            if match_where(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
+                            if eval_expression(column_value, operator, where_value): #does the record match the where clause query? Skip row 0 (headers)
                                 del records[row] #remove the record entry from the table
                                 row -= 1 #decrement row count so we don't end up an index ahead from where we should be
                                 records_deleted += 1
