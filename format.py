@@ -31,7 +31,7 @@ def process_query(command):
             # format_json(format_alter_query(command))
             return format_alter_query(command)
         case 'SELECT':
-            format_json(format_select_query(command))
+            # format_json(format_select_query(command))
             return format_select_query(command)
         case 'INSERT':
             #return format_insert_query(command)
