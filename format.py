@@ -181,7 +181,6 @@ def format_select_query(token_list):
     if not data['isJoin']:#if the select isn't joining tables then there is only one table selected
         data['tableName'] = token_list[from_index + 1] #the word after FROM is the table to select from
 
-    print(data)
     return data
 
 def format_insert_query(token_list): 
