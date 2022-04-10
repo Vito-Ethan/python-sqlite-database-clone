@@ -2,6 +2,7 @@ from operator import is_
 import format as form
 import csv
 import sys
+import re
 import json
 import shutil
 import os
@@ -108,27 +109,124 @@ def check_query(query):
                 curr_database = db_name
                 print(f"Using database {db_name}.")
         case 'SELECT':
-            table_name = query['tableName']
             selectAll = query['allColumns']
+            isJoin = query['isJoin']
+            if isJoin: 
+                table1 = query['tables'][0] 
+                table2 = query['tables'][1]
+            elif not isJoin:
+                table_name = query['tableName']
             if curr_database == None:
                 print("!Failed to select columns, no database selected.")
             else:
-                if not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
+                if not isJoin and not os.path.isfile(curr_database + "/" + table_name + ".csv"): #does the table exist?
                     print(f"!Failed to query table {table_name} because it does not exist.")
+                elif isJoin and not os.path.isfile(curr_database + "/" + table1 + ".csv"): #for a join query check if table 1 exists
+                    print(f"!Failed to query table {table1} because it does not exist.")
+                elif isJoin and not os.path.isfile(curr_database + "/" + table2 + ".csv"): #for a join query check if table 2 exists
+                    print(f"!Failed to query table {table2} because it does not exist.")
                 else:
                     if selectAll:
-                        with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
-                            csv_reader = csv.reader(csv_table_file)
-                            records = list(csv_reader)
-                            with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
-                                datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
-                                for i in range(len(records[0])):
-                                    print(f"{records[0][i]} {datatype_list[i]['datatype']}", end='')
-                                    if i != (len(records[0]) - 1):
-                                        print(' | ',end='')
-                                print()
-                                for line in records[1:]: #each line in the csv_reader is a list, so print the attributes values
-                                    print(" | ".join(line)) #join each element in line with ' | '
+                        if not isJoin: #if the query is not a join
+                            with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
+                                csv_reader = csv.reader(csv_table_file)
+                                records = list(csv_reader)
+                                with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
+                                    datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                                    for i in range(len(records[0])):
+                                        print(f"{records[0][i]} {datatype_list[i]['datatype']}", end='')
+                                        if i != (len(records[0]) - 1):
+                                            print(' | ',end='')
+                                    print()
+                                    for line in records[1:]: #each line in the csv_reader is a list, so print the attributes values
+                                        print(" | ".join(line)) #join each element in line with ' | '
+                        elif isJoin:
+                            # true_index = list(query['joinType'].values()).index(True) #stores index of joinType dictionary key with True value
+                            # join_type = list(query['joinType'].keys())[true_index].upper() #stores join type
+                            index_columns = [] #this will store the indexes of the columns from the join query (based on the csv)
+                            column_type = None #this will store the datatype of the column the join query is referencing
+                            if not query['joinType']['isWhereJoin']: #where join doesn't use on clause, so only perform this for other join queries
+                                operator = query['on']['operator'] #store the operator the where clause is matching against
+                                table1_column_attribute = re.split('[.]', query['on']['attribute'])[1] #store the column value we are evluating the join with
+                                table2_column_value = re.split('[.]', query['on']['value'])[1] #store the second column value we are evluating the join with
+                            else:
+                                operator = query['where']['operator'] #store the operator the where clause is matching against
+                                table1_column_attribute = re.split('[.]', query['where']['attribute'])[1] #store the column value we are evluating the join with
+                                table2_column_value = re.split('[.]', query['where']['value'])[1] #store the second column value we are evluating the join with
+                            table_types_table1 = [] #will hold the datatypes for each column in the table
+                            table_types_table2 = [] 
+                            with open(curr_database + "/" + table1 + ".csv", 'r') as csv_table_file:
+                                csv_reader_table1 = csv.reader(csv_table_file)
+                                records_table1 = list(csv_reader_table1)
+                            with open(curr_database + "/" + table2 + ".csv", 'r') as csv_table_file:
+                                csv_reader_table2 = csv.reader(csv_table_file)
+                                records_table2 = list(csv_reader_table2)
+                            with open(curr_database + "/" + table1 + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
+                                datatype_list_table1 = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                            with open(curr_database + "/" + table2 + ".json", 'r') as json_table_file: 
+                                datatype_list_table2 = json.load(json_table_file)
+                            combined_header = records_table1[0] + records_table2[0] #stores the combination of both table headers
+                            
+                            for entry in datatype_list_table1: #store the datatypes of each column in a list
+                                if entry['datatype'] == 'int':
+                                    table_types_table1.append(int)
+                                elif 'varchar' in entry['datatype']:
+                                    table_types_table1.append(str)
+                                elif entry['datatype'] == 'float':
+                                    table_types_table1.append(float)
+                            index_columns.append(records_table1[0].index(table1_column_attribute)) #holds the index (based on the csv) of the column to compare the join with
+                            index_columns.append(records_table2[0].index(table2_column_value))
+                            # print(index_columns)
+                            
+                            column_type = table_types_table1[index_columns[0]] #stores the datatype of the column in join query
+                            # print(column_type)
+                            header_length = len(combined_header)
+                            for i in range(header_length): #print out the datatypes
+                                if(i < len(records_table1[0])):
+                                    print(f"{combined_header[i]} {datatype_list_table1[i]['datatype']}", end='')
+                                else:
+                                    print(f"{combined_header[i]} {datatype_list_table2[i - len(records_table1[0])]['datatype']}", end='')
+                                if i != (header_length - 1):
+                                    print(' | ',end='')
+                            print() #formatting
+                            if query['joinType']['isWhereJoin'] or query['joinType']['isInner']: #inner join
+                                for i, tb1_row in enumerate(records_table1[1:]): #begin inner join
+                                    table1_value = tb1_row[index_columns[0]]
+                                    for j, tb2_row in enumerate(records_table2[1:]):
+                                        table2_value = tb2_row[index_columns[1]]
+                                        if column_type == int: #python converts csv values to strings so we need to typecast values based on how the table is structured
+                                            table1_value = int(table1_value)
+                                            table2_value = float(table2_value)
+                                        elif column_type == float:
+                                            table1_value = float(table1_value)
+                                            table2_value = float(table2_value)
+                                        elif column_type == str:
+                                            pass #nothing needs to be done
+                                        if eval_expression(table1_value, operator, table2_value):
+                                                print(" | ".join(tb1_row),end=' | ')
+                                                print(" | ".join(tb2_row))
+                                        else:
+                                            continue   
+                            elif query['joinType']['isLeft']:
+                                for i, tb1_row in enumerate(records_table1[1:]): #begin inner join
+                                    had_match = False #tracks if a tuple in table 1 matches any tuple in table 2
+                                    table1_value = tb1_row[index_columns[0]]
+                                    for j, tb2_row in enumerate(records_table2[1:]):
+                                        table2_value = tb2_row[index_columns[1]]
+                                        if column_type == int: #python converts csv values to strings so we need to typecast values based on how the table is structured
+                                            table1_value = int(table1_value)
+                                            table2_value = float(table2_value)
+                                        elif column_type == float:
+                                            table1_value = float(table1_value)
+                                            table2_value = float(table2_value)
+                                        elif column_type == str:
+                                            pass #nothing needs to be done
+                                        if eval_expression(table1_value, operator, table2_value): #
+                                            had_match = True
+                                            print(" | ".join(tb1_row),end=' | ')
+                                            print(" | ".join(tb2_row))
+                                        if not had_match and tb2_row == records_table2[-1]: #if reach last tuple in table2 and had no matches with table1, print tuple from table1
+                                            print(" | ".join(tb1_row),end=' |\n')
                     else: #if we are selecting specific columns
                         columns = query['columns']
                         index_columns = [] #this will store the indexes of the columns (based on the csv) the user has selected
@@ -136,21 +234,21 @@ def check_query(query):
                             with open(curr_database + "/" + table_name + ".csv", 'r') as csv_table_file:
                                 csv_reader = csv.reader(csv_table_file)
                                 records = list(csv_reader)
-                                with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
-                                    datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
-                                    for i, column_name in enumerate(columns):
-                                        field_index = records[0].index(column_name) #holds the index where a specific column name appears in the csv
-                                        index_columns.append(field_index)
-                                        print(f"{column_name} {datatype_list[field_index]['datatype']}", end='')
-                                        if i != (len(columns) - 1):
+                            with open(curr_database + "/" + table_name + ".json", 'r') as json_table_file: #open table's json file to view field's datatypes
+                                datatype_list = json.load(json_table_file) #load the field's corresponding datatypes into a list
+                                for i, column_name in enumerate(columns):
+                                    field_index = records[0].index(column_name) #holds the index where a specific column name appears in the csv
+                                    index_columns.append(field_index)
+                                    print(f"{column_name} {datatype_list[field_index]['datatype']}", end='')
+                                    if i != (len(columns) - 1):
+                                        print(' | ',end='')
+                                print() #print newlien for formatting
+                                for row in records[1:]: #loop through each record in the csv
+                                    for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
+                                        print(row[index_columns[i]], end='')
+                                        if i != (len(columns) - 1): #only print the bar if it isnt the last element
                                             print(' | ',end='')
-                                    print() #print newlien for formatting
-                                    for row in records[1:]: #loop through each record in the csv
-                                        for i in range(len(columns)): #loop through each attribute value in the record and only print the columns the user requested
-                                            print(row[index_columns[i]], end='')
-                                            if i != (len(columns) - 1): #only print the bar if it isnt the last element
-                                                print(' | ',end='')
-                                        print()
+                                    print()
                         else:
                             operator = query['where']['operator'] #store the operator the where clause is matching against
                             where_column = query['where']['attribute'] #store the column name 
@@ -164,7 +262,7 @@ def check_query(query):
                                     for entry in datatype_list: #store the datatypes of each column in a list
                                         if entry['datatype'] == 'int':
                                             table_types.append(int)
-                                        elif entry['datatype'] == 'varchar(20)':
+                                        elif 'varchar' in entry['datatype']:
                                             table_types.append(str)
                                         elif entry['datatype'] == 'float':
                                             table_types.append(float)
@@ -246,7 +344,7 @@ def check_query(query):
                     for entry in datatype_list:#store the datatypes of each column in a list
                         if entry['datatype'] == 'int':
                             table_types.append(int)
-                        elif entry['datatype'] == 'varchar(20)':
+                        elif 'varchar' in entry['datatype']:
                             table_types.append(str)
                         elif entry['datatype'] == 'float':
                             table_types.append(float)
@@ -295,7 +393,7 @@ def check_query(query):
                     for entry in datatype_list:#store the datatypes of each column in a list
                         if entry['datatype'] == 'int':
                             table_types.append(int)
-                        elif entry['datatype'] == 'varchar(20)':
+                        elif 'varchar' in entry['datatype']:
                             table_types.append(str)
                         elif entry['datatype'] == 'float':
                             table_types.append(float)
