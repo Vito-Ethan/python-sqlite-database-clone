@@ -3,6 +3,7 @@
     "allColumns": null,
     "isJoin": false,
     "joinType":{
+        "isWhereJoin": false,
         "isInner": false,
         "isLeft": false
     },
