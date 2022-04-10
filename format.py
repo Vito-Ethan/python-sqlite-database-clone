@@ -34,7 +34,7 @@ def process_query(command):
             # format_json(format_select_query(command))
             return format_select_query(command)
         case 'INSERT':
-            #return format_insert_query(command)
+            # format_json(format_insert_query(command))
             return format_insert_query(command)
         case 'UPDATE':
             return format_update_query(command)
@@ -72,7 +72,8 @@ def format_create_query(token_list):
     Returns:
         data: a dictionary with all the information about a CREATE DATABASE or CREATE TABLE query
     """
-    if token_list[1] == 'DATABASE':
+    temp = [x.upper() for x in token_list] #check against this, to not worry about being case-sensitive for query
+    if temp[1] == 'DATABASE':
         with open("data/query formats/create_query.json", "r") as f: #open default create json to format new input
             data = json.load(f)
 
@@ -81,7 +82,7 @@ def format_create_query(token_list):
 
         return data
 
-    elif token_list[1] == 'TABLE':
+    elif temp[1] == 'TABLE':
         with open("data/query formats/create_query.json", "r") as f:
             data = json.load(f)
 
@@ -156,6 +157,7 @@ def format_select_query(token_list):
         if (where_index - from_index) > 2: #join query (not using join statement), so store the aliases for the table names
             data['tables'] = token_list[from_index + 1:where_index:2]
             data['aliasList'] = token_list[from_index + 2:where_index:2]#aliases are two indexes apart so jump by 2 indexes
+            data['joinType']['isWhereJoin'] = True
             data['isJoin'] = True
     elif 'ON' in temp:
         on_index = temp.index('ON')
@@ -184,11 +186,10 @@ def format_select_query(token_list):
     return data
 
 def format_insert_query(token_list): 
-    value_list = list(filter(None,re.split(',\s|\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
+    value_list = list(filter(None,re.split(',|,\s|\s|;+', token_list[4]))) #4th index holds all the values, so tokenize each one.
     with open("data/query formats/insert_query.json", "r") as f: #open default insert json to format new input
         data = json.load(f)
     data['tableName'] = token_list[2]
-
     for index, value in enumerate(value_list):#add the values that the user wants to insert into a list
         data['variableValues'].append(value_list[index])
     return data
