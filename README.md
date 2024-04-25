@@ -9,8 +9,13 @@ a few of the basic SQL commands.
   - CREATE DATABASE
   - DROP DATABASE
   - USE <db_name>
-  - SELECT * FROM
   - CREATE TABLE <tb_name> (param1, param2)
+  - select * FROM
+    - select * FROM WHERE
+    - select * from inner join
+    - select * from left outer join
+  - update <tb_name> set where
+  - insert into <tb_name> 
 
 ## Example
 You can view the example_input.txt file to view some example commands and their expected outputs.
