@@ -17,5 +17,11 @@ a few of the basic SQL commands.
   - update <tb_name> set where
   - insert into <tb_name> 
 
+## Lessons Learned
+- At the time of making this program I did not know about or understand how compilers/interpreters worked internally.
+  - For example, using a lexer, parser, evaluator, nfas, dfas, etc.
+- This led to me crudely tokenizing my input (lexer) and parsing the tokens into a json object that represented the query I was working with. I would then process the query accordingly.
+- If I ever were to attempt a project like this again I would use a lexer/parser to generate an AST for me to work with.
+
 ## Example
 You can view the example_input.txt file to view some example commands and their expected outputs.
